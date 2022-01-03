@@ -9,7 +9,7 @@ use std::path::Path;
 /// use pathext::PathExt;
 ///
 /// assert!("/some/path".has_component("path"));
-/// assert!("/some/path".contains("some"));
+/// assert!("/some/path".contains("some/pa"));
 /// assert!("/this/and/that/".starts_or_ends_with("/"));
 /// ```
 pub trait PathExt {
