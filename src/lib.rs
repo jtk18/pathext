@@ -1,10 +1,19 @@
 use std::path::Path;
 
+/// A simple extension trait that includes some convenience methods I have found useful.
+///
+/// ```rust
+/// use pathext::PathExt;
+///
+/// let s = "/some/path";
+/// assert!(s.has_component("path"));
+/// ```
 pub trait PathExt {
     fn starts_or_ends_with(&self, pattern: &str) -> bool;
     fn has_component(&self, component: &str) -> bool;
 }
 
+/// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
 impl<T: AsRef<Path>> PathExt for T {
     fn starts_or_ends_with(&self, pattern: &str) -> bool {
         self.as_ref()
