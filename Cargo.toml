@@ -1,10 +1,9 @@
 [package]
 authors = ["Jason Kiniry <jason.kiniry@gmail.com>"]
 name = "pathext"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-documentation = "https://github.com/jtk18/pathext"
 homepage = "https://github.com/jtk18/pathext"
 repository = "https://github.com/jtk18/pathext"
 readme = "README.md"
