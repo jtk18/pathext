@@ -1,25 +1,28 @@
+//! # pathext
+//!
+//! A simple extension trait that includes some convenience methods I have found useful.
+//!
+
 use std::path::Path;
 
-/// A simple extension trait that includes some convenience methods I have found useful.
-///
 /// ```rust
 /// use pathext::PathExt;
 ///
-/// let s = "/some/path";
-/// assert!(s.has_component("path"));
+/// assert!("/some/path".has_component("path"));
 /// ```
 pub trait PathExt {
-    fn starts_or_ends_with(&self, pattern: &str) -> bool;
+    /// Checks if the contained pattern is in the stringified version of the AsRef<Path>
+    fn contains(&self, pattern: &str) -> bool;
+    /// Checks if the supplied component is present in total in the path
     fn has_component(&self, component: &str) -> bool;
+    /// Checks if the supplied pattern is at the beginning or end of the stringified version of the AsRef<Path>
+    fn starts_or_ends_with(&self, pattern: &str) -> bool;
 }
 
 /// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
 impl<T: AsRef<Path>> PathExt for T {
-    fn starts_or_ends_with(&self, pattern: &str) -> bool {
-        self.as_ref()
-            .to_str()
-            .map(|s| s.starts_with(pattern) || s.ends_with(pattern))
-            == Some(true)
+    fn contains(&self, pattern: &str) -> bool {
+        self.as_ref().to_str().map(|s| s.contains(pattern)) == Some(true)
     }
 
     fn has_component(&self, component: &str) -> bool {
@@ -27,12 +30,44 @@ impl<T: AsRef<Path>> PathExt for T {
             .components()
             .any(|c| c.as_os_str().eq(component))
     }
+
+    fn starts_or_ends_with(&self, pattern: &str) -> bool {
+        self.as_ref()
+            .to_str()
+            .map(|s| s.starts_with(pattern) || s.ends_with(pattern))
+            == Some(true)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::PathExt;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn test_contains() {
+        let tests = &[(
+            "/opt/somewhere/someplace/somehow/",
+            vec![
+                ("opt", true),
+                ("/opt", true),
+                ("somewhere", true),
+                ("/someplace/somehow", true),
+                ("someplace/somehow/", true),
+                ("root", false),
+            ],
+        )];
+
+        for test_case in tests {
+            for test in test_case.1.iter() {
+                assert_eq!(test_case.0.contains(test.0), test.1);
+                let p = Path::new(test_case.0);
+                assert_eq!(p.contains(test.0), test.1);
+                let pb = PathBuf::from(test_case.0);
+                assert_eq!(pb.contains(test.0), test.1);
+            }
+        }
+    }
 
     #[test]
     fn test_has_component() {
