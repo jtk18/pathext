@@ -1,7 +1,14 @@
 [package]
+authors = ["Jason Kiniry <jason.kiniry@gmail.com>"]
 name = "pathext"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+documentation = "https://github.com/jtk18/pathext"
+homepage = "https://github.com/jtk18/pathext"
+repository = "https://github.com/jtk18/pathext"
+readme = "README.md"
+description = "A small path trait extension with some convenience methods."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
