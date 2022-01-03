@@ -9,6 +9,8 @@ use std::path::Path;
 /// use pathext::PathExt;
 ///
 /// assert!("/some/path".has_component("path"));
+/// assert!("/some/path".contains("some"));
+/// assert!("/this/and/that/".starts_or_ends_with("/"));
 /// ```
 pub trait PathExt {
     /// Checks if the contained pattern is in the stringified version of the AsRef<Path>
