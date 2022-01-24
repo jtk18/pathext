@@ -63,10 +63,12 @@ mod tests {
 
     #[test]
     fn test_strip_extensions() {
-        let tests = &[(".stuff", Some("")),
-        ("something.tar.gz", Some("something")),
-        ("areally-cool.attempt.js", Some("areally-cool")),
-        ("lastdot.", Some("lastdot"))];
+        let tests = &[
+            (".stuff", Some("")),
+            ("something.tar.gz", Some("something")),
+            ("areally-cool.attempt.js", Some("areally-cool")),
+            ("lastdot.", Some("lastdot")),
+        ];
 
         for test_case in tests {
             assert_eq!(test_case.0.strip_extensions(), test_case.1);
