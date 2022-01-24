@@ -11,6 +11,7 @@ use std::path::Path;
 /// assert!("/some/path".has_component("path"));
 /// assert!("/some/path".contains("some/pa"));
 /// assert!("/this/and/that/".starts_or_ends_with("/"));
+/// assert!("multiple-extensions.tar.gz".strip_extensions() == Some("multiple-extensions"));
 /// ```
 pub trait PathExt {
     /// Checks if the contained pattern is in the stringified version of the AsRef<Path>
@@ -19,6 +20,8 @@ pub trait PathExt {
     fn has_component(&self, component: &str) -> bool;
     /// Checks if the supplied pattern is at the beginning or end of the stringified version of the AsRef<Path>
     fn starts_or_ends_with(&self, pattern: &str) -> bool;
+    /// Strips all extensions from a pathref. If the path isn't able to be converted to a `str` return `None` instead
+    fn strip_extensions(&self) -> Option<&str>;
 }
 
 /// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
@@ -39,12 +42,36 @@ impl<T: AsRef<Path>> PathExt for T {
             .map(|s| s.starts_with(pattern) || s.ends_with(pattern))
             == Some(true)
     }
+
+    fn strip_extensions(&self) -> Option<&str> {
+        if let Some(path) = self.as_ref().to_str() {
+            if let Some((base, ..)) = path.split_once('.') {
+                Some(base)
+            } else {
+                Some(path)
+            }
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::PathExt;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn test_strip_extensions() {
+        let tests = &[(".stuff", Some("")),
+        ("something.tar.gz", Some("something")),
+        ("areally-cool.attempt.js", Some("areally-cool")),
+        ("lastdot.", Some("lastdot"))];
+
+        for test_case in tests {
+            assert_eq!(test_case.0.strip_extensions(), test_case.1);
+        }
+    }
 
     #[test]
     fn test_contains() {
