@@ -38,7 +38,9 @@ pub trait PathExt {
 /// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
 impl<T: AsRef<Path>> PathExt for T {
     fn contains(&self, pattern: &str) -> bool {
-        self.as_ref().to_str().map_or(false, |s| s.contains(pattern))
+        self.as_ref()
+            .to_str()
+            .map_or(false, |s| s.contains(pattern))
     }
 
     fn has_component(&self, component: &str) -> bool {
@@ -202,8 +204,8 @@ mod tests {
             vec![
                 ("/usr/local", "aardvark"),
                 ("/usr/", "local/aardvark"),
-                ("/repos/local/", "/usr/local/aardvark")
-            ]
+                ("/repos/local/", "/usr/local/aardvark"),
+            ],
         )];
 
         for test_case in tests {
