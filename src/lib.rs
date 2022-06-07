@@ -31,6 +31,8 @@ pub trait PathExt {
     fn starts_or_ends_with(&self, pattern: &str) -> bool;
     /// Strips all extensions from a pathref. If the path isn't able to be converted to a `str` return `None` instead
     fn strip_extensions(&self) -> Option<&str>;
+    /// Strip the prefix if it's there
+    fn strip_prefix_if_needed<'a>(&'a self, prefix: &str) -> &'a Path;
 }
 
 /// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
@@ -66,6 +68,14 @@ impl<T: AsRef<Path>> PathExt for T {
             }
         } else {
             None
+        }
+    }
+
+    fn strip_prefix_if_needed<'a>(&'a self, prefix: &str) -> &'a Path {
+        if let Ok(stripped) = self.as_ref().strip_prefix(prefix) {
+            stripped
+        } else {
+            self.as_ref()
         }
     }
 }
@@ -181,6 +191,29 @@ mod tests {
                 assert_eq!(p.starts_or_ends_with(test.0), test.1);
                 let pb = PathBuf::from(test_case.0);
                 assert_eq!(pb.starts_or_ends_with(test.0), test.1);
+            }
+        }
+    }
+
+    #[test]
+    fn test_strip_prefix_if_needed() {
+        let tests = &[(
+            "/usr/local/aardvark",
+            vec![
+                ("/usr/local", "aardvark"),
+                ("/usr/", "local/aardvark"),
+                ("/repos/local/", "/usr/local/aardvark")
+            ]
+        )];
+
+        for test_case in tests {
+            for test in test_case.1.iter() {
+                let expected = Path::new(test.1);
+                assert_eq!(test_case.0.strip_prefix_if_needed(test.0), expected);
+                let p = Path::new(test_case.0);
+                assert_eq!(p.strip_prefix_if_needed(test.0), expected);
+                let pb = PathBuf::from(test_case.0);
+                assert_eq!(pb.strip_prefix_if_needed(test.0), expected);
             }
         }
     }
