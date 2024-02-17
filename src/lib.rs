@@ -7,58 +7,68 @@ use std::path::Path;
 
 /// ```rust
 /// use pathext::PathExt;
+/// use std::ops::Not;
 /// use std::path::Path;
 ///
 /// assert!("/some/path".has_component("path"));
 /// assert!(Path::new("/some/path").has_component("path"));
+/// assert!("/some/path".has_component("some/path").not());
+/// assert!("/some/path".has_component("so").not());
+///
 /// assert!("/some/path".contains("some/pa"));
 /// assert!(Path::new("/some/path").contains("some/pa"));
+///
 /// assert!("/this/and/that/".starts_or_ends_with("/"));
 /// assert!(Path::new("/this/and/that/").starts_or_ends_with("/"));
+///
 /// assert!("multiple-extensions.tar.gz".strip_extensions() == Some("multiple-extensions"));
 /// assert!(Path::new("multiple-extensions.tar.gz").strip_extensions() == Some("multiple-extensions"));
+///
 /// assert!("archive.tar.gz".ends_with_extensions(".tar.gz"));
 /// assert!(Path::new("archive.tar.gz").ends_with_extensions("tar.gz"));
+/// assert!(Path::new("archive.tar.gz").ends_with_extensions("z")); // it will match any part of the end of the extension
 /// ```
 pub trait PathExt {
     /// Checks if the contained pattern is in the stringified version of the AsRef<Path>
-    fn contains(&self, pattern: &str) -> bool;
-    /// `Path::ends_with` ignores the extensions on the end of the path. It's a real problem. This does it the right way.
-    fn ends_with_extensions(&self, pattern: &str) -> bool;
+    fn contains<S: AsRef<str>>(&self, pattern: S) -> bool;
+    /// `Path::ends_with` ignores the extensions on the end of the path. This version includes
+    /// them in the string to match. Note that the pattern can match a parital extension as long as it ENDS the path.
+    /// `assert!(Path::new("archive.tar.gz").ends_with_extensions("z"));` is valid.
+    fn ends_with_extensions<S: AsRef<str>>(&self, pattern: S) -> bool;
     /// Checks if the supplied component is present in total in the path
-    fn has_component(&self, component: &str) -> bool;
+    fn has_component<S: AsRef<str>>(&self, component: S) -> bool;
     /// Checks if the supplied pattern is at the beginning or end of the stringified version of the AsRef<Path>
-    fn starts_or_ends_with(&self, pattern: &str) -> bool;
+    fn starts_or_ends_with<S: AsRef<str>>(&self, pattern: S) -> bool;
     /// Strips all extensions from a pathref. If the path isn't able to be converted to a `str` return `None` instead
     fn strip_extensions(&self) -> Option<&str>;
     /// Strip the prefix if it's there
-    fn strip_prefix_if_needed<'a>(&'a self, prefix: &str) -> &'a Path;
+    fn strip_prefix_if_needed<'a, S: AsRef<str>>(&'a self, prefix: S) -> &'a Path;
 }
 
 /// I think this is the only implementation needed since there is a lot that implements AsRef<Path> in std.
 impl<T: AsRef<Path>> PathExt for T {
-    fn contains(&self, pattern: &str) -> bool {
+    fn contains<S: AsRef<str>>(&self, pattern: S) -> bool {
         self.as_ref()
             .to_str()
-            .map_or(false, |s| s.contains(pattern))
+            .map_or(false, |s| s.contains(pattern.as_ref()))
     }
 
-    fn has_component(&self, component: &str) -> bool {
+    fn has_component<S: AsRef<str>>(&self, component: S) -> bool {
         self.as_ref()
             .components()
-            .any(|c| c.as_os_str().eq(component))
+            .any(|c| c.as_os_str().eq(component.as_ref()))
     }
 
-    fn starts_or_ends_with(&self, pattern: &str) -> bool {
-        self.as_ref()
-            .to_str()
-            .map_or(false, |s| s.starts_with(pattern) || s.ends_with(pattern))
+    fn starts_or_ends_with<S: AsRef<str>>(&self, pattern: S) -> bool {
+        self.as_ref().to_str().map_or(false, |s| {
+            s.starts_with(pattern.as_ref()) || s.ends_with(pattern.as_ref())
+        })
     }
 
-    fn ends_with_extensions(&self, pattern: &str) -> bool {
+    fn ends_with_extensions<S: AsRef<str>>(&self, pattern: S) -> bool {
         self.as_ref()
             .to_str()
-            .map_or(false, |s| s.ends_with(pattern))
+            .map_or(false, |s| s.ends_with(pattern.as_ref()))
     }
 
     fn strip_extensions(&self) -> Option<&str> {
@@ -73,8 +83,8 @@ impl<T: AsRef<Path>> PathExt for T {
         }
     }
 
-    fn strip_prefix_if_needed<'a>(&'a self, prefix: &str) -> &'a Path {
-        if let Ok(stripped) = self.as_ref().strip_prefix(prefix) {
+    fn strip_prefix_if_needed<'a, S: AsRef<str>>(&'a self, prefix: S) -> &'a Path {
+        if let Ok(stripped) = self.as_ref().strip_prefix(prefix.as_ref()) {
             stripped
         } else {
             self.as_ref()
@@ -103,6 +113,7 @@ mod tests {
     // from a playground link I made https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c3d8a15324eeb911795bf5ac40bd2429
     #[test]
     fn is_ends_with_still_ignoring_extensions() {
+        // This doesn't make sense to me. Hence the crate.
         let archive_path = Path::new("archive.tar.gz");
         assert!(archive_path.ends_with(".tar.gz").not());
         assert!(archive_path.ends_with(OsStr::new(".tar.gz")).not());
