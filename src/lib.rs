@@ -27,12 +27,24 @@ use std::path::Path;
 /// assert!("archive.tar.gz".ends_with_extensions(".tar.gz"));
 /// assert!(Path::new("archive.tar.gz").ends_with_extensions("tar.gz"));
 /// assert!(Path::new("archive.tar.gz").ends_with_extensions("z")); // it will match any part of the end of the extension
+///
+/// // Unlike std
+/// assert!("archive.tar.gz".ends_with(".tar.gz"));
+/// assert!(Path::new("archive.tar.gz").ends_with(".tar.gz").not());
+/// assert!(Path::new("archive.tar.gz").ends_with("z").not());
 /// ```
 pub trait PathExt {
     /// Checks if the contained pattern is in the stringified version of the AsRef<Path>
     fn contains<S: AsRef<str>>(&self, pattern: S) -> bool;
-    /// `Path::ends_with` ignores the extensions on the end of the path. This version includes
-    /// them in the string to match. Note that the pattern can match a parital extension as long as it ENDS the path.
+    /// This function was created due to the following expectation breaking pattern in std:
+    /// `assert!("archive.tar.gz".ends_with(".tar.gz"));`
+    /// `assert!(Path::new("archive.tar.gz").ends_with(".tar.gz").not());`
+    ///
+    /// So, instead you can:
+    /// `assert!("archive.tar.gz".ends_with_extensions(".tar.gz"));`
+    /// `assert!(Path::new("archive.tar.gz").ends_with_extensions(".tar.gz"));`
+    ///
+    /// Note that the pattern can match a parital extension as long as it ENDS the path.
     /// `assert!(Path::new("archive.tar.gz").ends_with_extensions("z"));` is valid.
     fn ends_with_extensions<S: AsRef<str>>(&self, pattern: S) -> bool;
     /// Checks if the supplied component is present in total in the path
